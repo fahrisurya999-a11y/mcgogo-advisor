@@ -108,12 +108,13 @@ class OverlayService : Service() {
             paramsType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 50
-            y = 80
+            x = 100
+            y = 150
         }
 
         val container = LinearLayout(this).apply {
@@ -236,10 +237,11 @@ class OverlayService : Service() {
             val density = if (metrics.densityDpi > 0) metrics.densityDpi else DisplayMetrics.DENSITY_DEFAULT
 
             imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
+            val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY or DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
             virtualDisplay = mediaProjection?.createVirtualDisplay(
                 "MCGGScanDisplay",
                 width, height, density,
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                flags,
                 imageReader?.surface, null, null
             )
 
