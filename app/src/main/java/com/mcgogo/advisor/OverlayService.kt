@@ -101,7 +101,7 @@ class OverlayService : Service() {
         }
 
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             paramsType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
@@ -109,15 +109,51 @@ class OverlayService : Service() {
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-            y = 50
+            gravity = Gravity.TOP or Gravity.START
+            x = 50
+            y = 80
         }
 
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.parseColor("#EE111827"))
-            setPadding(32, 24, 32, 24)
+            setPadding(24, 16, 24, 16)
         }
+
+        // Add Drag Handle (Bisa digeser ke mana saja)
+        var initialX = 0
+        var initialY = 0
+        var initialTouchX = 0f
+        var initialTouchY = 0f
+
+        val dragHandle = TextView(this).apply {
+            text = "::: MCGG Advisor (Tahan & Geser) :::"
+            setTextColor(Color.parseColor("#94A3B8"))
+            textSize = 11f
+            gravity = Gravity.CENTER
+            setBackgroundColor(Color.parseColor("#1E293B"))
+            setPadding(8, 6, 8, 6)
+
+            setOnTouchListener { _, event ->
+                when (event.action) {
+                    android.view.MotionEvent.ACTION_DOWN -> {
+                        initialX = params.x
+                        initialY = params.y
+                        initialTouchX = event.rawX
+                        initialTouchY = event.rawY
+                        true
+                    }
+                    android.view.MotionEvent.ACTION_MOVE -> {
+                        params.x = initialX + (event.rawX - initialTouchX).toInt()
+                        params.y = initialY + (event.rawY - initialTouchY).toInt()
+                        windowManager?.updateViewLayout(overlayView, params)
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }
+        container.addView(dragHandle)
 
         bannerText = TextView(this).apply {
             text = "⚡ MCGG Advisor: Menunggu Toko Terbuka..."
