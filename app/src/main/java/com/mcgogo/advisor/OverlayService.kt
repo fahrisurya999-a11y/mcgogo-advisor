@@ -71,14 +71,14 @@ class OverlayService : Service() {
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            y = 100
+            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+            y = 50
         }
 
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#AA11141C"))
-            setPadding(24, 16, 24, 16)
+            setBackgroundColor(Color.parseColor("#EE111827"))
+            setPadding(32, 24, 32, 24)
         }
 
         val bannerText = TextView(this).apply {
