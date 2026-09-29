@@ -11,6 +11,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.os.Handler
+import android.os.Looper
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.ImageReader
@@ -223,28 +225,34 @@ class OverlayService : Service() {
     }
 
     private fun startScreenCapture(resultCode: Int, data: Intent) {
-        val mpManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        mediaProjection = mpManager.getMediaProjection(resultCode, data)
+        try {
+            val mpManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+            mediaProjection = mpManager.getMediaProjection(resultCode, data)
 
-        val metrics = DisplayMetrics()
-        windowManager?.defaultDisplay?.getRealMetrics(metrics)
-        val width = metrics.widthPixels
-        val height = metrics.heightPixels
-        val density = metrics.densityDpi
+            val metrics = DisplayMetrics()
+            windowManager?.defaultDisplay?.getRealMetrics(metrics)
+            val width = if (metrics.widthPixels > 0) metrics.widthPixels else 1080
+            val height = if (metrics.heightPixels > 0) metrics.heightPixels else 2400
+            val density = if (metrics.densityDpi > 0) metrics.densityDpi else DisplayMetrics.DENSITY_DEFAULT
 
-        imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
-        virtualDisplay = mediaProjection?.createVirtualDisplay(
-            "MCGGScanDisplay",
-            width, height, density,
-            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            imageReader?.surface, null, null
-        )
+            imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
+            virtualDisplay = mediaProjection?.createVirtualDisplay(
+                "MCGGScanDisplay",
+                width, height, density,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                imageReader?.surface, null, null
+            )
 
-        scanJob?.cancel()
-        scanJob = scope.launch {
-            while (isActive) {
-                delay(1500)
-                processLatestScreen()
+            scanJob?.cancel()
+            scanJob = scope.launch {
+                while (isActive) {
+                    delay(1500)
+                    processLatestScreen()
+                }
+            }
+        } catch (e: Exception) {
+            Handler(Looper.getMainLooper()).post {
+                bannerText?.text = "Scan Error: ${e.message}"
             }
         }
     }
