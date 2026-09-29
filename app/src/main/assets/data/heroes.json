@@ -1,0 +1,545 @@
+[
+ {
+  "id": "cici",
+  "name": "Cici",
+  "cost": 1,
+  "traits": [
+   "starbelle",
+   "weapon-master"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "dyrroth",
+  "name": "Dyrroth",
+  "cost": 1,
+  "traits": [
+   "bruiser",
+   "kishin"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "eudora",
+  "name": "Eudora",
+  "cost": 1,
+  "traits": [
+   "dragoncaller",
+   "stargazer"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "minotaur",
+  "name": "Minotaur",
+  "cost": 1,
+  "traits": [
+   "astro-power",
+   "defender"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "phoveus",
+  "name": "Phoveus",
+  "cost": 1,
+  "traits": [
+   "scavenger",
+   "spectre"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "uranus",
+  "name": "Uranus",
+  "cost": 1,
+  "traits": [
+   "dauntless",
+   "mistbender"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "vale",
+  "name": "Vale",
+  "cost": 1,
+  "traits": [
+   "echomancer",
+   "mage"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "yi-sun-shin",
+  "name": "Yi Sun Shin",
+  "cost": 1,
+  "traits": [],
+  "has_asset": true
+ },
+ {
+  "id": "angela",
+  "name": "Angela",
+  "cost": 2,
+  "traits": [
+   "kishin",
+   "scavenger"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "balmond",
+  "name": "Balmond",
+  "cost": 2,
+  "traits": [
+   "dauntless",
+   "dragoncaller"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "belerick",
+  "name": "Belerick",
+  "cost": 2,
+  "traits": [
+   "bruiser",
+   "enchanted-tales"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "granger",
+  "name": "Granger",
+  "cost": 2,
+  "traits": [
+   "marksman",
+   "spectre"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "harley",
+  "name": "Harley",
+  "cost": 2,
+  "traits": [
+   "echomancer",
+   "phasewarper"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "hylos",
+  "name": "Hylos",
+  "cost": 2,
+  "traits": [
+   "defender",
+   "shadeweaver"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "luo-yi",
+  "name": "Luo Yi",
+  "cost": 2,
+  "traits": [],
+  "has_asset": true
+ },
+ {
+  "id": "martis",
+  "name": "Martis",
+  "cost": 2,
+  "traits": [
+   "astro-power",
+   "weapon-master"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "miya",
+  "name": "Miya",
+  "cost": 2,
+  "traits": [
+   "marksman",
+   "starbelle"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "natalia",
+  "name": "Natalia",
+  "cost": 2,
+  "traits": [
+   "echomancer",
+   "swiftblade"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "zhuxin",
+  "name": "Zhuxin",
+  "cost": 2,
+  "traits": [
+   "mage",
+   "starbelle"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "aldous",
+  "name": "Aldous",
+  "cost": 3,
+  "traits": [
+   "bruiser",
+   "mistbender"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "clint",
+  "name": "Clint",
+  "cost": 3,
+  "traits": [
+   "dragoncaller",
+   "phasewarper"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "edith",
+  "name": "Edith",
+  "cost": 3,
+  "traits": [
+   "defender",
+   "starbelle"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "franco",
+  "name": "Franco",
+  "cost": 3,
+  "traits": [
+   "dauntless",
+   "kishin"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "hilda",
+  "name": "Hilda",
+  "cost": 3,
+  "traits": [
+   "astro-power",
+   "dauntless"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "kadita",
+  "name": "Kadita",
+  "cost": 3,
+  "traits": [
+   "mage",
+   "shadeweaver"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "karina",
+  "name": "Karina",
+  "cost": 3,
+  "traits": [
+   "astro-power",
+   "swiftblade"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "mathilda",
+  "name": "Mathilda",
+  "cost": 3,
+  "traits": [
+   "enchanted-tales",
+   "stargazer"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "paquito",
+  "name": "Paquito",
+  "cost": 3,
+  "traits": [
+   "bruiser",
+   "spectre"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "saber",
+  "name": "Saber",
+  "cost": 3,
+  "traits": [
+   "spectre",
+   "swiftblade"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "tigreal",
+  "name": "Tigreal",
+  "cost": 3,
+  "traits": [
+   "defender",
+   "echomancer"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "wanwan",
+  "name": "Wanwan",
+  "cost": 3,
+  "traits": [
+   "dragon-altar",
+   "marksman"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "atlas",
+  "name": "Atlas",
+  "cost": 4,
+  "traits": [
+   "defender",
+   "enchanted-tales"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "gord",
+  "name": "Gord",
+  "cost": 4,
+  "traits": [
+   "mage",
+   "spectre"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "gusion",
+  "name": "Gusion",
+  "cost": 4,
+  "traits": [
+   "dragoncaller",
+   "swiftblade"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "irithel",
+  "name": "Irithel",
+  "cost": 4,
+  "traits": [
+   "astro-power",
+   "marksman"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "karrie",
+  "name": "Karrie",
+  "cost": 4,
+  "traits": [
+   "kishin",
+   "marksman"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "lolita",
+  "name": "Lolita",
+  "cost": 4,
+  "traits": [
+   "dauntless",
+   "starbelle"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "lunox",
+  "name": "Lunox",
+  "cost": 4,
+  "traits": [
+   "kishin",
+   "stargazer"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "sora",
+  "name": "Sora",
+  "cost": 4,
+  "traits": [
+   "echomancer",
+   "scavenger"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "suyou",
+  "name": "Suyou",
+  "cost": 4,
+  "traits": [
+   "dragon-altar",
+   "weapon-master"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "vexana",
+  "name": "Vexana",
+  "cost": 4,
+  "traits": [
+   "enchanted-tales",
+   "mage"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "yin",
+  "name": "Yin",
+  "cost": 4,
+  "traits": [
+   "bruiser",
+   "dragon-altar"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "zilong",
+  "name": "Zilong",
+  "cost": 4,
+  "traits": [
+   "dragoncaller",
+   "weapon-master"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "alice",
+  "name": "Alice",
+  "cost": 5,
+  "traits": [
+   "dauntless",
+   "spectre"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "badang",
+  "name": "Badang",
+  "cost": 5,
+  "traits": [
+   "bruiser",
+   "dragoncaller"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "baxia",
+  "name": "Baxia",
+  "cost": 5,
+  "traits": [
+   "defender",
+   "dragon-altar"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "fanny",
+  "name": "Fanny",
+  "cost": 5,
+  "traits": [
+   "starbelle",
+   "swiftblade"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "lancelot",
+  "name": "Lancelot",
+  "cost": 5,
+  "traits": [
+   "kishin",
+   "phasewarper"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "melissa",
+  "name": "Melissa",
+  "cost": 5,
+  "traits": [
+   "marksman",
+   "shadeweaver"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "nana",
+  "name": "Nana",
+  "cost": 5,
+  "traits": [
+   "mistbender",
+   "stargazer"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "odette",
+  "name": "Odette",
+  "cost": 5,
+  "traits": [
+   "astro-power",
+   "mage"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "thamuz",
+  "name": "Thamuz",
+  "cost": 5,
+  "traits": [
+   "echomancer",
+   "weapon-master"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "alpha",
+  "name": "Alpha",
+  "cost": 7,
+  "traits": [
+   "spectre"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "luo-yi",
+  "name": "Luo Yi",
+  "cost": 2,
+  "traits": [
+   "dragon-altar",
+   "stargazer"
+  ],
+  "has_asset": true
+ },
+ {
+  "id": "yi-sun-shin",
+  "name": "Yi Sun Shin",
+  "cost": 1,
+  "traits": [
+   "dragon-altar",
+   "swiftblade"
+  ],
+  "has_asset": true
+ }
+]
