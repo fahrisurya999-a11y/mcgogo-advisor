@@ -1,6 +1,8 @@
 package com.mcgogo.advisor
 
+import android.app.Activity
 import android.content.Intent
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -12,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
 
     private val OVERLAY_PERMISSION_REQ_CODE = 1001
+    private val SCREEN_CAPTURE_REQ_CODE = 1002
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 
         btnStart.setOnClickListener {
             if (checkOverlayPermission()) {
-                startOverlayService()
+                requestScreenCapture()
             } else {
                 requestOverlayPermission()
             }
@@ -52,15 +55,41 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startOverlayService() {
+    private fun requestScreenCapture() {
+        val mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), SCREEN_CAPTURE_REQ_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
+            if (checkOverlayPermission()) {
+                requestScreenCapture()
+            } else {
+                Toast.makeText(this, "Izin Tampilkan di Atas Layar dibutuhkan!", Toast.LENGTH_LONG).show()
+            }
+        } else if (requestCode == SCREEN_CAPTURE_REQ_CODE) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                startOverlayService(resultCode, data)
+            } else {
+                Toast.makeText(this, "Izin rekam layar ditolak!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun startOverlayService(resultCode: Int, data: Intent) {
         try {
-            val intent = Intent(this, OverlayService::class.java)
+            val intent = Intent(this, OverlayService::class.java).apply {
+                putExtra("RESULT_CODE", resultCode)
+                putExtra("DATA_INTENT", data)
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(intent)
             } else {
                 startService(intent)
             }
-            Toast.makeText(this, "MCGG Overlay Aktif!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "MCGG Overlay & Scanner Aktif!", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Error: " + e.message, Toast.LENGTH_LONG).show()
         }
