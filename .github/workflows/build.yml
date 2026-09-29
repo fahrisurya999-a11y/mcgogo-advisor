@@ -18,17 +18,21 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: 'gradle'
 
-    - name: Install & Setup Gradle
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
-        gradle-version: 8.5
+        gradle-version: 8.2
 
-    - name: Build with Gradle
+    - name: Generate Wrapper & Build APK
       run: |
-        gradle wrapper --gradle-version 8.5
+        gradle wrapper --gradle-version 8.2 --distribution-type bin
         chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace --no-daemon
+        ./gradlew assembleDebug --no-daemon --stacktrace
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
