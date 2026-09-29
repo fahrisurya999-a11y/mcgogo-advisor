@@ -72,6 +72,7 @@ class MainActivity : AppCompatActivity() {
         } else if (requestCode == SCREEN_CAPTURE_REQ_CODE) {
             if (resultCode == Activity.RESULT_OK && data != null) {
                 startOverlayService(resultCode, data)
+                moveTaskToBack(true)
             } else {
                 Toast.makeText(this, "Izin rekam layar ditolak!", Toast.LENGTH_SHORT).show()
             }

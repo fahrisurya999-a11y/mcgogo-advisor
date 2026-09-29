@@ -68,7 +68,7 @@ class OverlayService : Service() {
         if (resultCode == Activity.RESULT_OK && dataIntent != null) {
             startScreenCapture(resultCode, dataIntent)
         }
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun startForegroundNotification() {
