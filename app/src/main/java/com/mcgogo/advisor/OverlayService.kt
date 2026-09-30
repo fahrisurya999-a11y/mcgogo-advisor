@@ -86,10 +86,14 @@ class OverlayService : Service() {
         val notification: Notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("MCGG Advisor Active")
             .setContentText("Overlay scanner sedang memantau rekomendasi toko...")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_launcher)
             .build()
 
-        startForeground(101, notification)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(101, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION or android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            startForeground(101, notification)
+        }
     }
 
     private fun setupOverlayView() {
@@ -132,10 +136,10 @@ class OverlayService : Service() {
         val dragHandle = TextView(this).apply {
             text = "::: MCGG Advisor (Tahan & Geser) :::"
             setTextColor(Color.parseColor("#94A3B8"))
-            textSize = 11f
+            textSize = 12f
             gravity = Gravity.CENTER
             setBackgroundColor(Color.parseColor("#1E293B"))
-            setPadding(8, 6, 8, 6)
+            setPadding(12, 10, 12, 10)
 
             setOnTouchListener { _, event ->
                 when (event.action) {
@@ -149,7 +153,9 @@ class OverlayService : Service() {
                     android.view.MotionEvent.ACTION_MOVE -> {
                         params.x = initialX + (event.rawX - initialTouchX).toInt()
                         params.y = initialY + (event.rawY - initialTouchY).toInt()
-                        windowManager?.updateViewLayout(overlayView, params)
+                        try {
+                            windowManager?.updateViewLayout(overlayView, params)
+                        } catch (_: Exception) {}
                         true
                     }
                     else -> false
