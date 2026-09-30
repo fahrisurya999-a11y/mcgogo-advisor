@@ -56,9 +56,15 @@ class OverlayService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        startForegroundNotification()
-        setupOverlayView()
-        loadMetaAndAssets()
+        try {
+            startForegroundNotification()
+            setupOverlayView()
+            loadMetaAndAssets()
+        } catch (e: Exception) {
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(applicationContext, "Overlay Crash: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -107,62 +113,24 @@ class OverlayService : Service() {
         }
 
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             paramsType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.TOP or Gravity.START
-            x = 100
-            y = 150
+            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+            x = 0
+            y = 60
         }
 
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#EE111827"))
-            setPadding(24, 16, 24, 16)
+            setBackgroundColor(Color.parseColor("#F0111827"))
+            setPadding(24, 20, 24, 20)
         }
-
-        // Add Drag Handle (Bisa digeser ke mana saja)
-        var initialX = 0
-        var initialY = 0
-        var initialTouchX = 0f
-        var initialTouchY = 0f
-
-        val dragHandle = TextView(this).apply {
-            text = "::: MCGG Advisor (Tahan & Geser) :::"
-            setTextColor(Color.parseColor("#94A3B8"))
-            textSize = 12f
-            gravity = Gravity.CENTER
-            setBackgroundColor(Color.parseColor("#1E293B"))
-            setPadding(12, 10, 12, 10)
-
-            setOnTouchListener { _, event ->
-                when (event.action) {
-                    android.view.MotionEvent.ACTION_DOWN -> {
-                        initialX = params.x
-                        initialY = params.y
-                        initialTouchX = event.rawX
-                        initialTouchY = event.rawY
-                        true
-                    }
-                    android.view.MotionEvent.ACTION_MOVE -> {
-                        params.x = initialX + (event.rawX - initialTouchX).toInt()
-                        params.y = initialY + (event.rawY - initialTouchY).toInt()
-                        try {
-                            windowManager?.updateViewLayout(overlayView, params)
-                        } catch (_: Exception) {}
-                        true
-                    }
-                    else -> false
-                }
-            }
-        }
-        container.addView(dragHandle)
 
         bannerText = TextView(this).apply {
             text = "⚡ MCGG Advisor: Menunggu Toko Terbuka..."
