@@ -297,7 +297,7 @@ class OverlayService : Service() {
                 } else {
                     val maxScore = scannedCards.maxOfOrNull { it.score } ?: 0.0
                     val topName = scannedCards.firstOrNull()?.heroName ?: "-"
-                    bannerText?.text = "⚡ Scan aktif (${width}x${height}) | Top: $topName (${String.format("%.2f", maxScore)})"
+                    bannerText?.text = "⚡ Scan aktif (${bitmap.width}x${bitmap.height}) | Top: $topName (${String.format("%.2f", maxScore)})"
                 }
             }
         } catch (_: Exception) {
