@@ -238,12 +238,12 @@ class OverlayService : Service() {
 
             val metrics = DisplayMetrics()
             windowManager?.defaultDisplay?.getRealMetrics(metrics)
-            val width = if (metrics.widthPixels > 0) metrics.widthPixels else 1080
-            val height = if (metrics.heightPixels > 0) metrics.heightPixels else 2400
+            val width = if (metrics.widthPixels > metrics.heightPixels) metrics.widthPixels else metrics.heightPixels
+            val height = if (metrics.widthPixels > metrics.heightPixels) metrics.heightPixels else metrics.widthPixels
             val density = if (metrics.densityDpi > 0) metrics.densityDpi else DisplayMetrics.DENSITY_DEFAULT
 
             imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
-            val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY or DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
+            val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR
             virtualDisplay = mediaProjection?.createVirtualDisplay(
                 "MCGGScanDisplay",
                 width, height, density,
@@ -266,13 +266,28 @@ class OverlayService : Service() {
     }
 
     private suspend fun processLatestScreen() {
-        val reader = imageReader ?: return
-        val currentMatcher = matcher ?: return
-        val currentAdvisor = advisor ?: return
+        val reader = imageReader ?: run {
+            withContext(Dispatchers.Main) { bannerText?.text = "Reader null" }
+            return
+        }
+        val currentMatcher = matcher ?: run {
+            withContext(Dispatchers.Main) { bannerText?.text = "Matcher null" }
+            return
+        }
+        val currentAdvisor = advisor ?: run {
+            withContext(Dispatchers.Main) { bannerText?.text = "Advisor null" }
+            return
+        }
 
         var bitmap: Bitmap? = null
         try {
-            val image = reader.acquireLatestImage() ?: return
+            val image = reader.acquireLatestImage()
+            if (image == null) {
+                withContext(Dispatchers.Main) {
+                    bannerText?.text = "⚡ Scan aktif (Menunggu frame gambar...)"
+                }
+                return
+            }
             val planes = image.planes
             val buffer = planes[0].buffer
             val pixelStride = planes[0].pixelStride
@@ -297,10 +312,13 @@ class OverlayService : Service() {
                 } else {
                     val maxScore = scannedCards.maxOfOrNull { it.score } ?: 0.0
                     val topName = scannedCards.firstOrNull()?.heroName ?: "-"
-                    bannerText?.text = "⚡ Scan aktif (${bitmap.width}x${bitmap.height}) | Top: $topName (${String.format("%.2f", maxScore)})"
+                    bannerText?.text = "⚡ Scan (${bitmap.width}x${bitmap.height}) | $topName (${String.format("%.2f", maxScore)})"
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                bannerText?.text = "Err: ${e.message}"
+            }
         } finally {
             bitmap?.recycle()
         }
