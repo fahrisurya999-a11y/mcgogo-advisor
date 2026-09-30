@@ -59,16 +59,33 @@ class OverlayService : Service() {
         startForegroundNotification()
         setupOverlayView()
         loadMetaAndAssets()
+        // Start ticker immediately from onCreate so overlay is always live
+        startTickerLoop()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val resultCode = intent?.getIntExtra("RESULT_CODE", Activity.RESULT_CANCELED) ?: Activity.RESULT_CANCELED
+        @Suppress("DEPRECATION")
         val dataIntent = intent?.getParcelableExtra<Intent>("DATA_INTENT")
 
         if (resultCode == Activity.RESULT_OK && dataIntent != null) {
             startScreenCapture(resultCode, dataIntent)
         }
         return START_NOT_STICKY
+    }
+
+    private fun startTickerLoop() {
+        scanJob?.cancel()
+        scanJob = scope.launch {
+            var tick = 0
+            while (isActive && mediaProjection == null) {
+                delay(1000)
+                tick++
+                withContext(Dispatchers.Main) {
+                    bannerText?.text = "⚡ MCGG Advisor aktif (${tick}s) — Izinkan rekam layar"
+                }
+            }
+        }
     }
 
     private fun startForegroundNotification() {
@@ -253,24 +270,9 @@ class OverlayService : Service() {
 
             scanJob?.cancel()
             scanJob = scope.launch {
-                var tick = 0
-                val dummyHeroes = listOf("Granger", "Karrie", "Lancelot", "Angela", "Atlas")
-                val dummyVerdict = listOf("BUY", "SAVE", "PASS", "BUY", "SAVE")
                 while (isActive) {
-                    delay(2000)
-                    tick++
-                    withContext(Dispatchers.Main) {
-                        bannerText?.text = "⚡ DIAGNOSTIC TICK $tick — Scanner sedang kalibrasi..."
-                        for (i in 0 until 5) {
-                            val tv = slotViews.getOrNull(i) ?: continue
-                            tv.text = "${dummyHeroes[i]}\n${dummyVerdict[i]}"
-                            when (dummyVerdict[i]) {
-                                "BUY" -> { tv.setBackgroundColor(Color.parseColor("#15803D")); tv.setTextColor(Color.WHITE) }
-                                "SAVE" -> { tv.setBackgroundColor(Color.parseColor("#A16207")); tv.setTextColor(Color.WHITE) }
-                                else -> { tv.setBackgroundColor(Color.parseColor("#334155")); tv.setTextColor(Color.WHITE) }
-                            }
-                        }
-                    }
+                    delay(1500)
+                    processLatestScreen()
                 }
             }
         } catch (e: Exception) {
