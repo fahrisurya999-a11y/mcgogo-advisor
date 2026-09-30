@@ -1,8 +1,6 @@
 package com.mcgogo.advisor
 
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Button
@@ -25,48 +23,45 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStatus() {
         val tv = findViewById<TextView>(R.id.tvStatus)
-        if (canDrawOverlays()) {
-            tv.text = "Izin overlay: OK\nTap Mulai Overlay untuk aktifkan"
+        if (isAccessibilityEnabled()) {
+            tv.text = "Accessibility Service: AKTIF\nOverlay sudah berjalan!\nBuka game MCGG sekarang."
         } else {
-            tv.text = "Izin overlay BELUM diberikan\nTap Minta Izin dulu, lalu kembali ke sini"
+            tv.text = "Accessibility Service BELUM aktif\nTap tombol di bawah untuk aktifkan"
         }
     }
 
     private fun setupButtons() {
         findViewById<Button>(R.id.btnPermission).setOnClickListener {
-            if (!canDrawOverlays()) {
-                requestOverlayPermission()
-            } else {
-                Toast.makeText(this, "Izin sudah OK! Tap Mulai Overlay", Toast.LENGTH_SHORT).show()
-            }
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            startActivity(intent)
+            Toast.makeText(this,
+                "Cari 'MCGG Advisor Overlay' dan aktifkan",
+                Toast.LENGTH_LONG).show()
         }
+
         findViewById<Button>(R.id.btnStart).setOnClickListener {
-            if (!canDrawOverlays()) {
-                requestOverlayPermission()
-                return@setOnClickListener
-            }
-            val intent = Intent(this, OverlayService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
+            if (!isAccessibilityEnabled()) {
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                startActivity(intent)
+                Toast.makeText(this, "Aktifkan dulu di Accessibility Settings", Toast.LENGTH_LONG).show()
             } else {
-                startService(intent)
+                Toast.makeText(this, "Overlay sudah aktif! Buka game MCGG", Toast.LENGTH_SHORT).show()
             }
-            Toast.makeText(this, "Overlay aktif! Buka game MCGG sekarang", Toast.LENGTH_LONG).show()
         }
+
         findViewById<Button>(R.id.btnStop).setOnClickListener {
-            stopService(Intent(this, OverlayService::class.java))
-            Toast.makeText(this, "Overlay dimatikan", Toast.LENGTH_SHORT).show()
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            startActivity(intent)
+            Toast.makeText(this, "Cari MCGG Advisor dan matikan", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun canDrawOverlays(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            Settings.canDrawOverlays(this)
-        else true
-    }
-
-    private fun requestOverlayPermission() {
-        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-        Toast.makeText(this, "Aktifkan 'Tampilkan di atas aplikasi lain' lalu kembali", Toast.LENGTH_LONG).show()
+    private fun isAccessibilityEnabled(): Boolean {
+        val service = packageName + "/" + OverlayService::class.java.canonicalName
+        val enabledServices = Settings.Secure.getString(
+            contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: return false
+        return enabledServices.contains(service)
     }
 }

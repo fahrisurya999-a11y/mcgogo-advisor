@@ -17,22 +17,30 @@
         android:layout_marginBottom="8dp" />
 
     <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Magic Chess Go Go Companion"
+        android:textColor="#64748B"
+        android:textSize="13sp"
+        android:layout_marginBottom="24dp" />
+
+    <TextView
         android:id="@+id/tvStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Mengecek izin..."
+        android:text="Mengecek status..."
         android:textColor="#90A4AE"
         android:textSize="13sp"
         android:gravity="center"
         android:layout_marginBottom="32dp"
-        android:padding="12dp"
+        android:padding="16dp"
         android:background="#1E293B" />
 
     <Button
         android:id="@+id/btnPermission"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:text="1. Minta Izin Overlay"
+        android:text="Buka Accessibility Settings"
         android:textSize="15sp"
         android:backgroundTint="#1D4ED8"
         android:layout_marginBottom="12dp" />
@@ -41,7 +49,7 @@
         android:id="@+id/btnStart"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:text="2. Mulai Overlay"
+        android:text="Cek Status Overlay"
         android:textSize="15sp"
         android:backgroundTint="#15803D"
         android:layout_marginBottom="12dp" />

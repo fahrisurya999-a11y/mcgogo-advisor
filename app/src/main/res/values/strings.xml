@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MCGG Advisor</string>
+    <string name="accessibility_description">MCGG Advisor menampilkan rekomendasi hero Magic Chess Go Go sebagai overlay di atas layar game</string>
 </resources>
