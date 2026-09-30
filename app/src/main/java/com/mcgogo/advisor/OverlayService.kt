@@ -290,10 +290,14 @@ class OverlayService : Service() {
             val scannedCards = currentMatcher.scanShop(bitmap)
             val identifiedIds = scannedCards.mapNotNull { it.heroId }
 
-            if (identifiedIds.isNotEmpty()) {
-                val rec = currentAdvisor.recommend(emptyList(), identifiedIds)
-                withContext(Dispatchers.Main) {
+            withContext(Dispatchers.Main) {
+                if (identifiedIds.isNotEmpty()) {
+                    val rec = currentAdvisor.recommend(emptyList(), identifiedIds)
                     updateOverlayUI(scannedCards, rec)
+                } else {
+                    val maxScore = scannedCards.maxOfOrNull { it.score } ?: 0.0
+                    val topName = scannedCards.firstOrNull()?.heroName ?: "-"
+                    bannerText?.text = "⚡ Scan aktif (${width}x${height}) | Top: $topName (${String.format("%.2f", maxScore)})"
                 }
             }
         } catch (_: Exception) {

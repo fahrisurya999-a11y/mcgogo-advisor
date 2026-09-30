@@ -121,15 +121,15 @@ class PureImageMatcher(
             }
 
             // Margin filter for accuracy (winner must be distinctly higher than runner-up)
-            val isReliable = bestScore >= 0.70 && (bestScore - runnerUp) >= 0.015
+            val isReliable = bestScore >= 0.55 && (bestScore - runnerUp) >= 0.008
             val finalId = if (isReliable) bestId else null
-            val hero = finalId?.let { db.heroes[it] }
+            val hero = (finalId ?: bestId)?.let { db.heroes[it] }
 
             results.add(
                 ScannedCard(
                     slotIndex = i,
                     heroId = finalId,
-                    heroName = hero?.name ?: "-",
+                    heroName = if (finalId != null) (hero?.name ?: "-") else "? " + (hero?.name ?: "-"),
                     cost = hero?.cost,
                     score = bestScore
                 )
