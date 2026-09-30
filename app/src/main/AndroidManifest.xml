@@ -31,7 +31,7 @@
             android:name=".OverlayService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="mediaProjection|specialUse" />
+            android:foregroundServiceType="mediaProjection" />
 
     </application>
 
