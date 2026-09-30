@@ -1,385 +1,134 @@
 package com.mcgogo.advisor
 
-import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PixelFormat
-import android.os.Handler
-import android.os.Looper
-import android.hardware.display.DisplayManager
-import android.hardware.display.VirtualDisplay
-import android.media.ImageReader
-import android.media.projection.MediaProjection
-import android.media.projection.MediaProjectionManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
-import android.util.DisplayMetrics
+import android.os.Looper
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class OverlayService : Service() {
-
     private var windowManager: WindowManager? = null
     private var overlayView: View? = null
     private var bannerText: TextView? = null
     private val slotViews = mutableListOf<TextView>()
-
-    private var mediaProjection: MediaProjection? = null
-    private var virtualDisplay: VirtualDisplay? = null
-    private var imageReader: ImageReader? = null
-    private var scanJob: Job? = null
-    private val scope = CoroutineScope(Dispatchers.Default)
-
-    private var db: MetaDB? = null
-    private var advisor: Advisor? = null
-    private var matcher: PureImageMatcher? = null
-
+    private val handler = Handler(Looper.getMainLooper())
+    private var tickCount = 0
+    private var isRunning = false
+    private val heroes = listOf("Granger","Karrie","Lancelot","Angela","Atlas")
+    private val verdicts = listOf("BUY","SAVE","PASS","BUY","SAVE")
+    private val bgColors = listOf("#15803D","#A16207","#334155","#15803D","#A16207")
+    private val tickRunnable = object : Runnable {
+        override fun run() {
+            if (!isRunning) return
+            tickCount++
+            bannerText?.text = "MCGG Advisor Live #$tickCount"
+            for (i in 0 until 5) {
+                val tv = slotViews.getOrNull(i) ?: continue
+                tv.text = heroes[i] + "\n" + verdicts[i]
+                tv.setBackgroundColor(Color.parseColor(bgColors[i]))
+                tv.setTextColor(Color.WHITE)
+            }
+            handler.postDelayed(this, 2000)
+        }
+    }
     override fun onBind(intent: Intent?): IBinder? = null
-
     override fun onCreate() {
         super.onCreate()
         startForegroundNotification()
-        setupOverlayView()
-        loadMetaAndAssets()
-        // Start ticker immediately from onCreate so overlay is always live
-        startTickerLoop()
+        setupOverlay()
+        isRunning = true
+        handler.post(tickRunnable)
     }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val resultCode = intent?.getIntExtra("RESULT_CODE", Activity.RESULT_CANCELED) ?: Activity.RESULT_CANCELED
-        @Suppress("DEPRECATION")
-        val dataIntent = intent?.getParcelableExtra<Intent>("DATA_INTENT")
-
-        if (resultCode == Activity.RESULT_OK && dataIntent != null) {
-            startScreenCapture(resultCode, dataIntent)
-        }
-        return START_NOT_STICKY
+    override fun onDestroy() {
+        super.onDestroy()
+        isRunning = false
+        handler.removeCallbacks(tickRunnable)
+        try { overlayView?.let { windowManager?.removeView(it) } } catch (e: Exception) {}
     }
-
-    private fun startTickerLoop() {
-        scanJob?.cancel()
-        scanJob = scope.launch {
-            var tick = 0
-            while (isActive && mediaProjection == null) {
-                delay(1000)
-                tick++
-                withContext(Dispatchers.Main) {
-                    bannerText?.text = "⚡ MCGG Advisor aktif (${tick}s) — Izinkan rekam layar"
-                }
-            }
-        }
-    }
-
     private fun startForegroundNotification() {
-        val channelId = "mcgogo_overlay_channel"
+        val channelId = "mcgogo_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "MCGG Advisor Running",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
+            val ch = NotificationChannel(channelId, "MCGG Advisor", NotificationManager.IMPORTANCE_LOW)
+            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
         }
-
-        val notification: Notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("MCGG Advisor Active")
-            .setContentText("Overlay scanner sedang memantau rekomendasi toko...")
-            .setSmallIcon(R.drawable.ic_launcher)
+        val notif: Notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("MCGG Advisor")
+            .setContentText("Overlay aktif")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .build()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(101, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION or android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-        } else {
-            startForeground(101, notification)
-        }
+        startForeground(1, notif)
     }
-
-    private fun setupOverlayView() {
-        windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
-        val paramsType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    private fun setupOverlay() {
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            @Suppress("DEPRECATION")
-            WindowManager.LayoutParams.TYPE_PHONE
-        }
-
+        else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            paramsType,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            type,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
-        ).apply {
-            gravity = Gravity.TOP or Gravity.START
-            x = 100
-            y = 150
-        }
-
-        val container = LinearLayout(this).apply {
+        ).apply { gravity = Gravity.TOP or Gravity.START; x = 20; y = 120 }
+        val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#EE111827"))
-            setPadding(24, 16, 24, 16)
+            setBackgroundColor(Color.parseColor("#F0111827"))
+            setPadding(20, 14, 20, 14)
         }
-
-        // Add Drag Handle (Bisa digeser ke mana saja)
-        var initialX = 0
-        var initialY = 0
-        var initialTouchX = 0f
-        var initialTouchY = 0f
-
-        val dragHandle = TextView(this).apply {
-            text = "::: MCGG Advisor (Tahan & Geser) :::"
-            setTextColor(Color.parseColor("#94A3B8"))
-            textSize = 12f
-            gravity = Gravity.CENTER
+        var ix = 0; var iy = 0; var tx = 0f; var ty = 0f
+        val handle = TextView(this).apply {
+            text = "MCGG Advisor - Geser di sini"
+            setTextColor(Color.parseColor("#FFD700"))
+            textSize = 13f; gravity = Gravity.CENTER
             setBackgroundColor(Color.parseColor("#1E293B"))
-            setPadding(12, 10, 12, 10)
-
-            setOnTouchListener { _, event ->
-                when (event.action) {
-                    android.view.MotionEvent.ACTION_DOWN -> {
-                        initialX = params.x
-                        initialY = params.y
-                        initialTouchX = event.rawX
-                        initialTouchY = event.rawY
-                        true
-                    }
-                    android.view.MotionEvent.ACTION_MOVE -> {
-                        params.x = initialX + (event.rawX - initialTouchX).toInt()
-                        params.y = initialY + (event.rawY - initialTouchY).toInt()
-                        try {
-                            windowManager?.updateViewLayout(overlayView, params)
-                        } catch (_: Exception) {}
+            setPadding(16, 10, 16, 10)
+            setOnTouchListener { _, e ->
+                when (e.action) {
+                    MotionEvent.ACTION_DOWN -> { ix = params.x; iy = params.y; tx = e.rawX; ty = e.rawY; true }
+                    MotionEvent.ACTION_MOVE -> {
+                        params.x = ix + (e.rawX - tx).toInt(); params.y = iy + (e.rawY - ty).toInt()
+                        try { windowManager?.updateViewLayout(overlayView, params) } catch (e: Exception) {}
                         true
                     }
                     else -> false
                 }
             }
         }
-        container.addView(dragHandle)
-
+        root.addView(handle)
         bannerText = TextView(this).apply {
-            text = "⚡ MCGG Advisor: Menunggu Toko Terbuka..."
-            setTextColor(Color.parseColor("#FFD700"))
-            textSize = 14f
-            gravity = Gravity.CENTER
+            text = "Memuat..."
+            setTextColor(Color.parseColor("#94A3B8"))
+            textSize = 11f; gravity = Gravity.CENTER; setPadding(0, 6, 0, 6)
         }
-        container.addView(bannerText)
-
-        val slotsRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            weightSum = 5f
-            setPadding(0, 12, 0, 0)
-        }
-
+        root.addView(bannerText)
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; weightSum = 5f }
         slotViews.clear()
-        for (i in 1..5) {
-            val slotText = TextView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                    setMargins(4, 0, 4, 0)
-                }
-                text = "Slot $i\n--"
-                setTextColor(Color.WHITE)
-                textSize = 11f
-                gravity = Gravity.CENTER
-                setBackgroundColor(Color.parseColor("#334455"))
-                setPadding(4, 8, 4, 8)
-            }
-            slotViews.add(slotText)
-            slotsRow.addView(slotText)
-        }
-        container.addView(slotsRow)
-
-        overlayView = container
-        windowManager?.addView(overlayView, params)
-    }
-
-    private fun loadMetaAndAssets() {
-        scope.launch {
-            try {
-                val heroesJson = assets.open("data/heroes.json").bufferedReader().use { it.readText() }
-                val traitsJson = assets.open("data/traits.json").bufferedReader().use { it.readText() }
-                val loadedDb = MetaDB.load(heroesJson, traitsJson)
-                db = loadedDb
-                advisor = Advisor(loadedDb)
-
-                val bitmaps = mutableMapOf<String, Bitmap>()
-                for (hid in loadedDb.heroes.keys) {
-                    try {
-                        assets.open("heroes/$hid.png").use { stream ->
-                            val bmp = BitmapFactory.decodeStream(stream)
-                            if (bmp != null) bitmaps[hid] = bmp
-                        }
-                    } catch (_: Exception) {}
-                }
-                matcher = PureImageMatcher(loadedDb, bitmaps)
-
-                withContext(Dispatchers.Main) {
-                    bannerText?.text = "⚡ Scanner Siap (${bitmaps.size} Hero Dimuat) — Memantau Layar..."
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    bannerText?.text = "Error load data: ${e.message}"
-                }
-            }
-        }
-    }
-
-    private fun startScreenCapture(resultCode: Int, data: Intent) {
-        try {
-            val mpManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-            mediaProjection = mpManager.getMediaProjection(resultCode, data)
-
-            val metrics = DisplayMetrics()
-            windowManager?.defaultDisplay?.getRealMetrics(metrics)
-            val width = if (metrics.widthPixels > metrics.heightPixels) metrics.widthPixels else metrics.heightPixels
-            val height = if (metrics.widthPixels > metrics.heightPixels) metrics.heightPixels else metrics.widthPixels
-            val density = if (metrics.densityDpi > 0) metrics.densityDpi else DisplayMetrics.DENSITY_DEFAULT
-
-            imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
-            val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR
-            virtualDisplay = mediaProjection?.createVirtualDisplay(
-                "MCGGScanDisplay",
-                width, height, density,
-                flags,
-                imageReader?.surface, null, null
-            )
-
-            scanJob?.cancel()
-            scanJob = scope.launch {
-                while (isActive) {
-                    delay(1500)
-                    processLatestScreen()
-                }
-            }
-        } catch (e: Exception) {
-            Handler(Looper.getMainLooper()).post {
-                bannerText?.text = "Scan Error: ${e.message}"
-            }
-        }
-    }
-
-    private suspend fun processLatestScreen() {
-        val reader = imageReader ?: run {
-            withContext(Dispatchers.Main) { bannerText?.text = "Reader null" }
-            return
-        }
-        val currentMatcher = matcher ?: run {
-            withContext(Dispatchers.Main) { bannerText?.text = "Matcher null" }
-            return
-        }
-        val currentAdvisor = advisor ?: run {
-            withContext(Dispatchers.Main) { bannerText?.text = "Advisor null" }
-            return
-        }
-
-        var bitmap: Bitmap? = null
-        try {
-            val image = reader.acquireLatestImage()
-            if (image == null) {
-                withContext(Dispatchers.Main) {
-                    bannerText?.text = "⚡ Scan aktif (Menunggu frame gambar...)"
-                }
-                return
-            }
-            val planes = image.planes
-            val buffer = planes[0].buffer
-            val pixelStride = planes[0].pixelStride
-            val rowStride = planes[0].rowStride
-            val rowPadding = rowStride - pixelStride * image.width
-
-            bitmap = Bitmap.createBitmap(
-                image.width + rowPadding / pixelStride,
-                image.height,
-                Bitmap.Config.ARGB_8888
-            )
-            bitmap.copyPixelsFromBuffer(buffer)
-            image.close()
-
-            val scannedCards = currentMatcher.scanShop(bitmap)
-            val identifiedIds = scannedCards.mapNotNull { it.heroId }
-
-            withContext(Dispatchers.Main) {
-                if (identifiedIds.isNotEmpty()) {
-                    val rec = currentAdvisor.recommend(emptyList(), identifiedIds)
-                    updateOverlayUI(scannedCards, rec)
-                } else {
-                    val maxScore = scannedCards.maxOfOrNull { it.score } ?: 0.0
-                    val topName = scannedCards.firstOrNull()?.heroName ?: "-"
-                    bannerText?.text = "⚡ Scan (${bitmap.width}x${bitmap.height}) | $topName (${String.format("%.2f", maxScore)})"
-                }
-            }
-        } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                bannerText?.text = "Err: ${e.message}"
-            }
-        } finally {
-            bitmap?.recycle()
-        }
-    }
-
-    private fun updateOverlayUI(cards: List<ScannedCard>, rec: Recommendation) {
-        bannerText?.text = "⚡ Target: ${rec.targetComp}"
-
         for (i in 0 until 5) {
-            val tv = slotViews.getOrNull(i) ?: continue
-            val card = cards.getOrNull(i)
-            if (card != null && card.heroId != null) {
-                val advice = rec.advices.firstOrNull { it.hero.id == card.heroId }
-                val verdict = advice?.verdict ?: "PASS"
-                tv.text = "${card.heroName}\n$verdict"
-
-                when (verdict) {
-                    "BUY" -> {
-                        tv.setBackgroundColor(Color.parseColor("#15803D"))
-                        tv.setTextColor(Color.WHITE)
-                    }
-                    "SAVE" -> {
-                        tv.setBackgroundColor(Color.parseColor("#A16207"))
-                        tv.setTextColor(Color.WHITE)
-                    }
-                    else -> {
-                        tv.setBackgroundColor(Color.parseColor("#334155"))
-                        tv.setTextColor(Color.parseColor("#94A3B8"))
-                    }
-                }
-            } else {
-                tv.text = "Slot ${i + 1}\n--"
-                tv.setBackgroundColor(Color.parseColor("#1E293B"))
-                tv.setTextColor(Color.parseColor("#64748B"))
+            val tv = TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                    .apply { setMargins(3, 4, 3, 0) }
+                text = "Slot " + (i+1).toString() + "\n--"
+                textSize = 10f; gravity = Gravity.CENTER; setTextColor(Color.WHITE)
+                setBackgroundColor(Color.parseColor("#1E293B")); setPadding(4, 8, 4, 8)
             }
+            slotViews.add(tv); row.addView(tv)
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        scanJob?.cancel()
-        virtualDisplay?.release()
-        imageReader?.close()
-        mediaProjection?.stop()
-        overlayView?.let { windowManager?.removeView(it) }
+        root.addView(row)
+        overlayView = root
+        windowManager?.addView(overlayView, params)
     }
 }

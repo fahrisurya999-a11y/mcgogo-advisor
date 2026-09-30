@@ -11,34 +11,47 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="MCGG Advisor"
-        android:textColor="#FFFFFF"
-        android:textSize="26sp"
+        android:textColor="#FFD700"
+        android:textSize="28sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Magic Chess Go Go Vision &amp; Meta Companion"
+        android:text="Mengecek izin..."
         android:textColor="#90A4AE"
         android:textSize="13sp"
-        android:layout_marginBottom="40dp" />
+        android:gravity="center"
+        android:layout_marginBottom="32dp"
+        android:padding="12dp"
+        android:background="#1E293B" />
+
+    <Button
+        android:id="@+id/btnPermission"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="1. Minta Izin Overlay"
+        android:textSize="15sp"
+        android:backgroundTint="#1D4ED8"
+        android:layout_marginBottom="12dp" />
 
     <Button
         android:id="@+id/btnStart"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="Mulai Floating Overlay"
-        android:textSize="16sp"
-        android:backgroundTint="#00C853"
-        android:layout_marginBottom="16dp" />
+        android:layout_height="56dp"
+        android:text="2. Mulai Overlay"
+        android:textSize="15sp"
+        android:backgroundTint="#15803D"
+        android:layout_marginBottom="12dp" />
 
     <Button
         android:id="@+id/btnStop"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="56dp"
         android:text="Matikan Overlay"
-        android:textSize="16sp"
-        android:backgroundTint="#D50000" />
+        android:textSize="15sp"
+        android:backgroundTint="#B91C1C" />
 
 </LinearLayout>
