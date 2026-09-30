@@ -1,134 +1,153 @@
 package com.mcgogo.advisor
 
-import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.AccessibilityServiceInfo
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import android.view.accessibility.AccessibilityEvent
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.app.NotificationCompat
 
-class OverlayService : AccessibilityService() {
+class OverlayService : Service() {
 
-    private var windowManager: WindowManager? = null
-    private var overlayView: View? = null
-    private var bannerText: TextView? = null
-    private val slotViews = mutableListOf<TextView>()
-    private val handler = Handler(Looper.getMainLooper())
-    private var tickCount = 0
-    private var isRunning = false
+    private var wm: WindowManager? = null
+    private var root: View? = null
+    private var banner: TextView? = null
+    private val slots = mutableListOf<TextView>()
+    private val h = Handler(Looper.getMainLooper())
+    private var tick = 0
+    private var alive = false
 
     private val heroes = listOf("Granger","Karrie","Lancelot","Angela","Atlas")
     private val verdicts = listOf("BUY","SAVE","PASS","BUY","SAVE")
-    private val bgColors = listOf("#15803D","#A16207","#334155","#15803D","#A16207")
+    private val colors = listOf("#15803D","#A16207","#334155","#15803D","#A16207")
 
-    private val tickRunnable = object : Runnable {
+    private val runner = object : Runnable {
         override fun run() {
-            if (!isRunning) return
-            tickCount++
-            bannerText?.text = "MCGG Advisor Live #$tickCount"
+            if (!alive) return
+            tick++
+            banner?.text = "MCGG Advisor #$tick"
             for (i in 0 until 5) {
-                val tv = slotViews.getOrNull(i) ?: continue
+                val tv = slots.getOrNull(i) ?: continue
                 tv.text = heroes[i] + "\n" + verdicts[i]
-                tv.setBackgroundColor(Color.parseColor(bgColors[i]))
+                tv.setBackgroundColor(Color.parseColor(colors[i]))
                 tv.setTextColor(Color.WHITE)
             }
-            handler.postDelayed(this, 2000)
+            h.postDelayed(this, 2000)
         }
     }
 
-    override fun onServiceConnected() {
-        super.onServiceConnected()
-        val info = AccessibilityServiceInfo()
-        info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
-        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
-        serviceInfo = info
-        setupOverlay()
-        isRunning = true
-        handler.post(tickRunnable)
-    }
+    override fun onBind(i: Intent?): IBinder? = null
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
-    override fun onInterrupt() {}
+    override fun onCreate() {
+        super.onCreate()
+        notif()
+        buildOverlay()
+        alive = true
+        h.postDelayed(runner, 500)
+    }
 
     override fun onDestroy() {
+        alive = false
+        h.removeCallbacks(runner)
+        try { root?.let { wm?.removeView(it) } } catch (_: Exception) {}
         super.onDestroy()
-        isRunning = false
-        handler.removeCallbacks(tickRunnable)
-        try { overlayView?.let { windowManager?.removeView(it) } } catch (e: Exception) {}
     }
 
-    private fun setupOverlay() {
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-            PixelFormat.TRANSLUCENT
-        ).apply {
-            gravity = Gravity.TOP or Gravity.START
-            x = 20; y = 150
+    private fun notif() {
+        val ch = "mcgg"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val c = NotificationChannel(ch, "MCGG", NotificationManager.IMPORTANCE_MIN)
+            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(c)
         }
+        val n: Notification = NotificationCompat.Builder(this, ch)
+            .setContentTitle("MCGG Advisor")
+            .setContentText("Overlay aktif")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .build()
+        startForeground(1, n)
+    }
 
-        val root = LinearLayout(this).apply {
+    private fun buildOverlay() {
+        wm = getSystemService(WINDOW_SERVICE) as WindowManager
+
+        val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
+
+        val lp = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            type,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+            PixelFormat.TRANSLUCENT
+        ).also { it.gravity = Gravity.TOP or Gravity.START; it.x = 24; it.y = 200 }
+
+        val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#F0111827"))
-            setPadding(20, 14, 20, 14)
+            setBackgroundColor(Color.parseColor("#E8111827"))
+            setPadding(18, 12, 18, 12)
         }
 
         var ix = 0; var iy = 0; var tx = 0f; var ty = 0f
         val handle = TextView(this).apply {
-            text = "MCGG Advisor - Geser di sini"
+            text = "■ MCGG Advisor"
             setTextColor(Color.parseColor("#FFD700"))
-            textSize = 13f; gravity = Gravity.CENTER
+            textSize = 12f; gravity = Gravity.CENTER
             setBackgroundColor(Color.parseColor("#1E293B"))
-            setPadding(16, 10, 16, 10)
+            setPadding(14, 10, 14, 10)
             setOnTouchListener { _, e ->
                 when (e.action) {
-                    MotionEvent.ACTION_DOWN -> { ix = params.x; iy = params.y; tx = e.rawX; ty = e.rawY; true }
+                    MotionEvent.ACTION_DOWN -> { ix = lp.x; iy = lp.y; tx = e.rawX; ty = e.rawY; true }
                     MotionEvent.ACTION_MOVE -> {
-                        params.x = ix + (e.rawX - tx).toInt()
-                        params.y = iy + (e.rawY - ty).toInt()
-                        try { windowManager?.updateViewLayout(overlayView, params) } catch (e: Exception) {}
+                        lp.x = ix + (e.rawX - tx).toInt()
+                        lp.y = iy + (e.rawY - ty).toInt()
+                        try { wm?.updateViewLayout(root, lp) } catch (_: Exception) {}
                         true
                     }
                     else -> false
                 }
             }
         }
-        root.addView(handle)
+        container.addView(handle)
 
-        bannerText = TextView(this).apply {
+        banner = TextView(this).apply {
             text = "Memuat..."
             setTextColor(Color.parseColor("#94A3B8"))
-            textSize = 11f; gravity = Gravity.CENTER; setPadding(0, 6, 0, 6)
+            textSize = 10f; gravity = Gravity.CENTER; setPadding(0, 4, 0, 4)
         }
-        root.addView(bannerText)
+        container.addView(banner)
 
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; weightSum = 5f }
-        slotViews.clear()
+        slots.clear()
         for (i in 0 until 5) {
             val tv = TextView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                    .apply { setMargins(3, 4, 3, 0) }
-                text = "Slot " + (i+1).toString() + "\n--"
-                textSize = 10f; gravity = Gravity.CENTER; setTextColor(Color.WHITE)
-                setBackgroundColor(Color.parseColor("#1E293B")); setPadding(4, 8, 4, 8)
+                    .apply { setMargins(2, 4, 2, 0) }
+                text = "S${i+1}\n--"; textSize = 9f; gravity = Gravity.CENTER
+                setTextColor(Color.WHITE)
+                setBackgroundColor(Color.parseColor("#1E293B"))
+                setPadding(3, 6, 3, 6)
             }
-            slotViews.add(tv); row.addView(tv)
+            slots.add(tv); row.addView(tv)
         }
-        root.addView(row)
-        overlayView = root
-        windowManager?.addView(overlayView, params)
+        container.addView(row)
+        root = container
+        wm?.addView(root, lp)
     }
 }

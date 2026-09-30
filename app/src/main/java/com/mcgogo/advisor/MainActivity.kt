@@ -1,6 +1,8 @@
 package com.mcgogo.advisor
 
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Button
@@ -13,55 +15,37 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setupButtons()
+
+        findViewById<Button>(R.id.btnPermission).setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+            } else {
+                Toast.makeText(this, "Izin sudah OK!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        findViewById<Button>(R.id.btnStart).setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, "Aktifkan izin overlay dulu!", Toast.LENGTH_LONG).show()
+                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+                return@setOnClickListener
+            }
+            val svc = Intent(this, OverlayService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(svc) else startService(svc)
+            Toast.makeText(this, "Overlay aktif! Buka game MCGG", Toast.LENGTH_LONG).show()
+            moveTaskToBack(true)
+        }
+
+        findViewById<Button>(R.id.btnStop).setOnClickListener {
+            stopService(Intent(this, OverlayService::class.java))
+            Toast.makeText(this, "Overlay dimatikan", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        updateStatus()
-    }
-
-    private fun updateStatus() {
-        val tv = findViewById<TextView>(R.id.tvStatus)
-        if (isAccessibilityEnabled()) {
-            tv.text = "Accessibility Service: AKTIF\nOverlay sudah berjalan!\nBuka game MCGG sekarang."
-        } else {
-            tv.text = "Accessibility Service BELUM aktif\nTap tombol di bawah untuk aktifkan"
-        }
-    }
-
-    private fun setupButtons() {
-        findViewById<Button>(R.id.btnPermission).setOnClickListener {
-            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            startActivity(intent)
-            Toast.makeText(this,
-                "Cari 'MCGG Advisor Overlay' dan aktifkan",
-                Toast.LENGTH_LONG).show()
-        }
-
-        findViewById<Button>(R.id.btnStart).setOnClickListener {
-            if (!isAccessibilityEnabled()) {
-                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                startActivity(intent)
-                Toast.makeText(this, "Aktifkan dulu di Accessibility Settings", Toast.LENGTH_LONG).show()
-            } else {
-                Toast.makeText(this, "Overlay sudah aktif! Buka game MCGG", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        findViewById<Button>(R.id.btnStop).setOnClickListener {
-            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            startActivity(intent)
-            Toast.makeText(this, "Cari MCGG Advisor dan matikan", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun isAccessibilityEnabled(): Boolean {
-        val service = packageName + "/" + OverlayService::class.java.canonicalName
-        val enabledServices = Settings.Secure.getString(
-            contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ) ?: return false
-        return enabledServices.contains(service)
+        val ok = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(this) else true
+        findViewById<TextView>(R.id.tvStatus).text =
+            if (ok) "✅ Izin overlay OK\nTap Mulai Overlay lalu buka game" else "⚠️ Belum ada izin\nTap Minta Izin dulu"
     }
 }
