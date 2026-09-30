@@ -92,7 +92,7 @@ class OverlayService : Service() {
         val notification: Notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("MCGG Advisor Active")
             .setContentText("Overlay scanner sedang memantau rekomendasi toko...")
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(android.R.drawable.ic_menu_camera)
             .build()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
